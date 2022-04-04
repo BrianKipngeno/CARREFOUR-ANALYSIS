@@ -1,0 +1,123 @@
+---
+title: "Assosiation Analysis for CarreFour Kenya"
+author: "Brian"
+date: '2022-04-01'
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem Definition
+> As a Data analyst at Carrefour Kenya I am doing a project that will inform the marketing department on the most relevant marketing strategies that will result in the highest no. of sales (total price including tax). 
+
+## a) Specifying the Question
+
+1. Identify relationships between the Group of Items
+
+## b) Metric of Success
+> The goal of this project is to Identify the relationships between the Groups of Items provided
+
+## c) The Context
+Working on the CarreFour Kenya Sales data to identify the most relevant marketing strategies by identifying related groups of Items that are related
+
+## d) Experimental Design
+1. Source the Data
+2. Load the Data
+3. Check the Data
+4. Implement the Solution
+5. Challenge the Solution
+
+# Data Sourcing
+```{r Library}
+library(arules)
+```
+
+```{r Association Data}
+# Data to find associations
+transaction <- read.transactions("http://bit.ly/SupermarketDatasetII",sep=",")
+head(transaction)
+```
+
+# Check the Data
+```{r Check Data Type}
+# Confirm that our data type is transaction
+class(transaction)
+```
+
+```{r Inspect}
+# The First 10 transactions
+inspect(transaction[1:10])
+
+```
+
+```{r Items Set size}
+# number of items in the first 10 itemset or transaction
+size(head(transaction, 10))
+```
+
+```{r Items}
+# View 10 items that make up our dataset
+item <- as.data.frame(itemLabels(transaction))
+colnames(item) <- "Item"
+head(item,10)
+```
+
+```{r Summary}
+# Summary of our Transactions
+summary(transaction)
+```
+
+```{r Explore Item frequency}
+print("Frequency of each item")
+itemFrequency(transaction[,1:15], type="absolute")
+cat ("Tab\n")
+print("Frequency of first 15 Items compared to Others")
+# How many times these items have appeared as compared to others.
+round(itemFrequency(transaction[,1:15], type="relative")*100,2)
+```
+
+```{r Item Frequency Plot}
+# Most common items
+library(RColorBrewer)
+itemFrequencyPlot(transaction, topN= 10, col=brewer.pal(8,'Set1'),main="Relative Item Frequency Plot")
+itemFrequencyPlot(transaction, support= 0.1, col=brewer.pal(8,'Set1'),main="Relative Importance is at least 10%")
+```
+
+
+# Implement the Solution
+```{r Rules}
+# Build a Model based on association rules
+# min_supp -> 0.001
+# confidence -> 0.8
+rules <- apriori(transaction, parameter = list(supp=0.001, conf=0.75))
+rules
+summary(rules)
+inspect(rules[1:5])
+```
+
+```{r }
+rules<-sort(rules, by="confidence", decreasing=TRUE)
+inspect(rules[1:10])
+```
+
+
+Some transations have upto 20 items but the most frequent transaction have 1 - 5 items.
+The  5 most popular Items are:-
+
+1. mineral water
+2. eggs
+3. spaghetti
+4. french fries
+5. chocolates
+
+The 5 most popular have support at least 10% and 2 more items which are:-
+
+1. green tea 
+2. milk
+
+We have 4 rules with 100% confidence in the association. We can use this association to increase sales in Females customers in the Branch A and B buy identifying which products the Female Customers buy most
+This can also be done for Male Customers in Branch C
+
+
+The Model can also be used to improve the Marketing and Sales of the Product Lines that are not popular with any of the customers in any Branch.
